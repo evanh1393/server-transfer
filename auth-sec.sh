@@ -28,6 +28,19 @@ rm -f "$PRIVATE_KEY_PATH" "$PUBLIC_KEY_PATH"
 
 ssh -o StrictHostKeyChecking=no "$TARGET_SSH" "sed -i '/$KEY_STRING/d' ~/.ssh/authorized_keys"
 
+ssh "$DESTINATION_SSH" "mkdir -p $DESTINATION_FOLDER_PATH"
+
+CURRENT_MONTH=$(date +"%Y/%m")
+LAST_MONTH=$(date -d "1 month ago" +"%Y/%m")
+TWO_MONTHS_AGO=$(date -d "2 months ago" +"%Y/%m")
+
+ssh -o StrictHostKeyChecking=no "$DESTINATION_SSH" \
+  "rsync -avz -e --progress 'ssh -o StrictHostKeyChecking=no -i $DESTINATION_PRIVATE_KEY_PATH' \
+  $TARGET_USER@$TARGET_IP:$TARGET_FOLDER_PATH/$CURRENT_MONTH \
+  $TARGET_USER@$TARGET_IP:$TARGET_FOLDER_PATH/$LAST_MONTH \
+  $TARGET_USER@$TARGET_IP:$TARGET_FOLDER_PATH/$TWO_MONTHS_AGO \
+  $DESTINATION_FOLDER_PATH"
+
 aws ec2 revoke-security-group-ingress \
   --group-id "$TARGET_SECURITY_GROUP_ID" \
   --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$DESTINATION_IP/32,Description='temporary access evanh'}]" \
