@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# Using AWS cli 2 with federated priveleges may need to change this if not...
 aws ec2 authorize-security-group-ingress \
   --group-id $TARGET_SECURITY_GROUP_ID \
   --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$DESTINATION_IP/32,Description='temporary access evanh'}]" \
@@ -21,13 +21,6 @@ scp "$PRIVATE_KEY_PATH" "$DESTINATION_SSH":"$DESTINATION_PRIVATE_KEY_PATH"
 ssh "$DESTINATION_SSH" "chmod 600 $DESTINATION_PRIVATE_KEY_PATH"
 ssh -o StrictHostKeyChecking=no "$DESTINATION_SSH" "scp -o 'StrictHostKeyChecking=no' -i $DESTINATION_PRIVATE_KEY_PATH forge@$TARGET_IP:~/test.txt /home/forge/test_from_target.txt"
 
-KEY_STRING=$(awk '{print $2}' "$PUBLIC_KEY_PATH")
-
-ssh "$DESTINATION_SSH" "rm -f $DESTINATION_PRIVATE_KEY_PATH"
-rm -f "$PRIVATE_KEY_PATH" "$PUBLIC_KEY_PATH"
-
-ssh -o StrictHostKeyChecking=no "$TARGET_SSH" "sed -i '/$KEY_STRING/d' ~/.ssh/authorized_keys"
-
 ssh "$DESTINATION_SSH" "mkdir -p $DESTINATION_FOLDER_PATH"
 
 CURRENT_MONTH=$(date +"%Y/%m")
@@ -40,6 +33,12 @@ ssh -o StrictHostKeyChecking=no "$DESTINATION_SSH" \
   $TARGET_USER@$TARGET_IP:$TARGET_FOLDER_PATH/$LAST_MONTH \
   $TARGET_USER@$TARGET_IP:$TARGET_FOLDER_PATH/$TWO_MONTHS_AGO \
   $DESTINATION_FOLDER_PATH"
+
+rm -f "$PRIVATE_KEY_PATH" "$PUBLIC_KEY_PATH"
+ssh "$DESTINATION_SSH" "rm -f $DESTINATION_PRIVATE_KEY_PATH"
+
+KEY_STRING=$(awk '{print $2}' "$PUBLIC_KEY_PATH")
+ssh -o StrictHostKeyChecking=no "$TARGET_SSH" "sed -i '/$KEY_STRING/d' ~/.ssh/authorized_keys"
 
 aws ec2 revoke-security-group-ingress \
   --group-id "$TARGET_SECURITY_GROUP_ID" \
