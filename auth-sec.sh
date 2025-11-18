@@ -19,7 +19,6 @@ DESTINATION_PRIVATE_KEY_PATH="~/.ssh/$KEY_NAME"
 
 scp "$PRIVATE_KEY_PATH" "$DESTINATION_SSH":"$DESTINATION_PRIVATE_KEY_PATH"
 ssh "$DESTINATION_SSH" "chmod 600 $DESTINATION_PRIVATE_KEY_PATH"
-ssh -o StrictHostKeyChecking=no "$DESTINATION_SSH" "scp -o 'StrictHostKeyChecking=no' -i $DESTINATION_PRIVATE_KEY_PATH forge@$TARGET_IP:~/test.txt /home/forge/test_from_target.txt"
 # Due to the danger of potentially deleting everything, in sensitive folders best delete things yourself.
 # otherwise feel free to uncomment...
 #ssh "$DESTINATION_SSH" "rm -rf $DESTINATION_FOLDER_PATH/*"
